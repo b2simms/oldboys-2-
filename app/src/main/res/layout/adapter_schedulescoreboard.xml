@@ -1,0 +1,61 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:padding="6dip" >
+
+    <ImageView
+        android:id="@+id/team_image"
+        android:layout_width="60dp"
+        android:layout_height="fill_parent"
+        android:contentDescription="TODO"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <ImageView
+        android:id="@+id/team2_image"
+        android:layout_width="60dp"
+        android:layout_height="fill_parent"
+        android:contentDescription="TODO"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="wrap_content"
+        android:layout_height="26dip"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="Description"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/team2_image"
+        android:gravity="bottom" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="8 - 8"
+        android:textColor="#000000"
+        android:id="@+id/score_board"
+        android:layout_above="@+id/location"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:id="@+id/location"
+        android:layout_width="wrap_content"
+        android:layout_height="26dip"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="Description"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:gravity="bottom"
+        android:layout_alignParentBottom="true"
+        android:layout_toRightOf="@+id/team_image"
+        android:layout_toEndOf="@+id/team_image" />
+
+</RelativeLayout> 

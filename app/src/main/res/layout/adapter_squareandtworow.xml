@@ -1,0 +1,77 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:padding="6dip" >
+
+    <ImageView
+        android:id="@+id/team_image"
+        android:layout_width="60dp"
+        android:layout_height="fill_parent"
+        android:contentDescription="TODO"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:id="@+id/team_text"
+        android:layout_width="wrap_content"
+        android:layout_height="16dip"
+        android:layout_alignParentBottom="true"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="Description"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:layout_toRightOf="@+id/team_image"
+        android:layout_toEndOf="@+id/team_image" />
+
+    <TextView
+        android:id="@+id/name_text"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/team_text"
+        android:layout_alignParentTop="true"
+        android:layout_alignWithParentIfMissing="true"
+        android:gravity="center_vertical"
+        android:text=""
+        android:textSize="16sp"
+        android:textColor="#000000"
+        android:layout_alignLeft="@+id/team_text"
+        android:layout_alignStart="@+id/team_text"
+        android:layout_toLeftOf="@+id/date"
+        android:layout_toStartOf="@+id/date" />
+
+    <ImageView
+        android:id="@+id/team2_image"
+        android:layout_width="60dp"
+        android:layout_height="fill_parent"
+        android:contentDescription="TODO"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="wrap_content"
+        android:layout_height="26dip"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="Description"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:layout_alignParentBottom="true"
+        android:layout_toLeftOf="@+id/team2_image"
+        android:gravity="bottom" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text=""
+        android:textColor="#000000"
+        android:id="@+id/text_date"
+        android:layout_above="@+id/date"
+        android:layout_toLeftOf="@+id/team2_image"
+        android:layout_toStartOf="@+id/team2_image" />
+
+</RelativeLayout> 
