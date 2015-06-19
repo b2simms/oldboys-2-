@@ -76,7 +76,7 @@ public class LoginScreen extends Activity {
                         //retrieve username and password from database
                         new HttpAsyncTask().execute("http://bsimms2.byethost5.com/index.php/login/" + inputName.getText().toString());
                     }else{
-                        Toast.makeText(getBaseContext(), "No Network Connection", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getBaseContext(), "No Netwok Connection", Toast.LENGTH_LONG).show();
                     }
 
                 }catch(Exception e){
