@@ -23,12 +23,12 @@ import java.util.Locale;
  * Created by bsimmons on 09/06/2015.
  */
 
-public class MessagingRow_Adapter extends ArrayAdapter<String> {
+public class Adapter_Messaging extends ArrayAdapter<String> {
     private final Context context;
-    private ArrayList<MessageInfo> info;
+    private ArrayList<Info_Message> info;
     private String date_last_viewed;
 
-    public MessagingRow_Adapter(Context context, ArrayList<MessageInfo> info, String[] values, String date_last_viewed) {
+    public Adapter_Messaging(Context context, ArrayList<Info_Message> info, String[] values, String date_last_viewed) {
         super(context, R.layout.adapter_messagingrow, values);
         this.context = context;
         this.info = info;

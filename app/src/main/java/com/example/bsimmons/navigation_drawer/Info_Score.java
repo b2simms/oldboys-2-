@@ -4,7 +4,7 @@ package com.example.bsimmons.navigation_drawer;
  * Created by bsimmons on 12/06/2015.
  */
 
-public class ScoreInfo {
+public class Info_Score {
 
     private String first_name;
     private String last_name;

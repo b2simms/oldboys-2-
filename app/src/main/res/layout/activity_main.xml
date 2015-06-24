@@ -5,6 +5,7 @@
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:windowSoftInputMode="stateHidden"
     tools:context=".MainActivity">
 
     <!-- As the main content view, the view below consumes the entire
@@ -45,13 +46,13 @@
     <fragment android:id="@+id/navigation_drawer"
         android:layout_width="@dimen/navigation_drawer_width" android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:name="com.example.bsimmons.navigation_drawer.NavigationDrawerFragment"
+        android:name="com.example.bsimmons.navigation_drawer.Fragment_NavigationDrawer"
         tools:layout="@layout/fragment_navigation_drawer" />
 
     <fragment android:id="@+id/schedule_fragment"
         android:layout_width="@dimen/navigation_drawer_width" android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:name="com.example.bsimmons.navigation_drawer.Schedule_fragment"
+        android:name="com.example.bsimmons.navigation_drawer.Fragment_Schedule"
         tools:layout="@layout/fragment_navigation_drawer" />
 
 

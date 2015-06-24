@@ -5,6 +5,10 @@
     xmlns:tools="http://schemas.android.com/tools"
         tools:context=".MainActivity">
 
+    <item android:id="@+id/action_login"
+        android:title="@string/action_login"
+        app:showAsAction="withText|ifRoom" />
+
     <item android:id="@+id/action_example"
         android:title="@string/action_example"
         app:showAsAction="withText|ifRoom" />

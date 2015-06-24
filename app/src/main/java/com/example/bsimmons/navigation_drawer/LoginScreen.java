@@ -4,17 +4,21 @@ package com.example.bsimmons.navigation_drawer;
  * Created by bsimmons on 08/06/2015.
  */
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 
+import android.support.v7.app.AlertDialog;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -90,7 +94,6 @@ public class LoginScreen extends Activity {
     }
 
     private void checkLogin(String name, String pass){
-        System.out.println("checkname:" + name + " checkPass: " + pass);
 
         //check username and password against database
         if (name.equalsIgnoreCase(inputName.getText().toString()) && pass.equals(inputPass.getText().toString())) {
@@ -102,7 +105,9 @@ public class LoginScreen extends Activity {
             nextScreen.putExtra("Password", inputPass.getText().toString());
             nextScreen.putExtra("Team",playerTeam);
             nextScreen.putExtra("Date",date);
-            nextScreen.putExtra("Player_id",player_id);
+            nextScreen.putExtra("Player_id", player_id);
+
+            finish();
 
             startActivity(nextScreen);
         } else {
@@ -166,6 +171,8 @@ public class LoginScreen extends Activity {
             return false;
     }
     private class HttpAsyncTask extends AsyncTask<String, Void, String> {
+
+
         @Override
         protected String doInBackground(String... urls) {
 
@@ -190,7 +197,8 @@ public class LoginScreen extends Activity {
                 playerTeam = json.optString("team");
                 date = json.optString("message_last_view_date");
                 player_id = json.optString("player_id");
-                checkLogin(playerName,playerPass);
+                checkLogin(playerName, playerPass);
+
 
             }
             catch(Exception e){
@@ -198,6 +206,18 @@ public class LoginScreen extends Activity {
                 showError(1);
             }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(this).setIcon(android.R.drawable.ic_dialog_alert).setTitle("Exit")
+                .setMessage("Are you sure you want to exit?")
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                }).setNegativeButton("No", null).show();
     }
 
 

@@ -3,7 +3,7 @@ package com.example.bsimmons.navigation_drawer;
 /**
  * Created by bsimmons on 05/06/2015.
  */
-public class Game {
+public class Info_Game {
 
     private String game_id;
     private String team1;

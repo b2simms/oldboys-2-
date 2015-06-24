@@ -4,7 +4,7 @@ package com.example.bsimmons.navigation_drawer;
  * Created by bsimmons on 11/06/2015.
  */
 
-import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -21,7 +21,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -32,6 +31,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -41,15 +41,18 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
-public class Schedule_fragment extends Fragment {
+public class Fragment_Schedule extends Fragment {
 
     public static final String HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_SCHEDULE = "http://bsimms2.byethost5.com/index.php/schedule";
-    private ArrayList<Game> games;
+    public static final String HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_TEAM = "http://bsimms2.byethost5.com/index.php/team";
+    public static final String HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_SCHEDULE_PLUS_TEAM = "http://bsimms2.byethost5.com/index.php/schedule/";
+    private ArrayList<Info_Game> games;
     private ListView listView;
     private String team_selected;
     private static boolean edit = false;
+    private boolean editPermission = false;
+    private final String ADMIN_USER = "Admin";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -70,9 +73,17 @@ public class Schedule_fragment extends Fragment {
 
         edit = false;
 
-        Intent i = getActivity().getIntent();
-        team_selected = i.getStringExtra("Team");
+        setTeamSelectedAndEditPermissions();
+        setUpListView();
 
+        if(isConnected()) {
+            new SpinnerAsyncTask().execute(HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_TEAM);
+        } else {
+            Toast.makeText(getActivity(), "No Network Connection", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void setUpListView() {
         // Get ListView object from xml
         listView = (ListView) getView().findViewById(R.id.listView);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -86,20 +97,8 @@ public class Schedule_fragment extends Fragment {
                         TextView temp = (TextView) getActivity().findViewById(R.id.action_example);
                         temp.setBackgroundColor(Color.BLACK);
 
-                        Fragment fragment_edit = new Edit_Schedule_fragment();
-                        Bundle bundle = new Bundle();
-                        bundle.putString("game_id", games.get(position).getGame_id());
-                        bundle.putString("team1", games.get(position).getTeam1());
-                        bundle.putString("team2", games.get(position).getTeam2());
-                        bundle.putString("day", games.get(position).getDay());
-                        bundle.putString("time", games.get(position).getTime());
-                        bundle.putString("location", games.get(position).getLocation());
-                        bundle.putString("date", games.get(position).getDate());
-                        bundle.putString("team1_score", games.get(position).getTeam1_score());
-                        bundle.putString("team2_score", games.get(position).getTeam2_score());
-                        bundle.putString("updated", games.get(position).getUpdated());
-
-                        fragment_edit.setArguments(bundle);
+                        Fragment fragment_edit = new Fragment_Edit_Schedule();
+                        setBundleToSend(position, fragment_edit);
 
                         FragmentManager fm = getActivity().getSupportFragmentManager();
 
@@ -112,17 +111,35 @@ public class Schedule_fragment extends Fragment {
                     }
                 }
             }
+
+            private void setBundleToSend(int position, Fragment fragment_edit) {
+                Bundle bundle = new Bundle();
+                bundle.putString("game_id", games.get(position).getGame_id());
+                bundle.putString("team1", games.get(position).getTeam1());
+                bundle.putString("team2", games.get(position).getTeam2());
+                bundle.putString("day", games.get(position).getDay());
+                bundle.putString("time", games.get(position).getTime());
+                bundle.putString("location", games.get(position).getLocation());
+                bundle.putString("date", games.get(position).getDate());
+                bundle.putString("team1_score", games.get(position).getTeam1_score());
+                bundle.putString("team2_score", games.get(position).getTeam2_score());
+                bundle.putString("updated", games.get(position).getUpdated());
+
+                fragment_edit.setArguments(bundle);
+            }
         });
+    }
 
-
-        System.out.println(games);
-
-        if(isConnected()) {
-            new SpinnerAsyncTask().execute("http://bsimms2.byethost5.com/index.php/team");
+    private void setTeamSelectedAndEditPermissions() {
+        Intent i = getActivity().getIntent();
+        if(i.getStringExtra("Team") == null){
+            team_selected = "ALL";
         } else {
-            Toast.makeText(getActivity(), "No Network Connection", Toast.LENGTH_LONG).show();
+            team_selected = i.getStringExtra("Team");
+            if(i.getStringExtra("Name").equalsIgnoreCase(ADMIN_USER)){
+                editPermission=true;
+            }
         }
-
     }
 
     public static String GET(String url) {
@@ -192,13 +209,10 @@ public class Schedule_fragment extends Fragment {
 
             try {
 
-
                 JSONObject json = new JSONObject(result);
-
 
                 //get json array
                 JSONArray jsonarray = json.getJSONArray("games");
-
                 teamlist.add("ALL");
 
                 for (int i = 0; i < jsonarray.length(); i++) {
@@ -207,67 +221,76 @@ public class Schedule_fragment extends Fragment {
                     teamlist.add(json.optString("team1"));
                 }
 
-                // Locate the spinner in activity_main.xml
-                Spinner mySpinner = (Spinner) getView().findViewById(R.id.my_spinner);
+                setTeamListSpinner();
 
-                // Spinner adapter
-                mySpinner.setAdapter(new ArrayAdapter<String>(getActivity(),
-                        R.layout.spinner_item, teamlist));
-
-                for (int i = 0; i < teamlist.size(); i++) {
-                    if (team_selected.equals(teamlist.get(i))) {
-                        String[] team_arr = team_selected.split("\\s+");
-                        if (team_arr.length > 1) {
-                            team_selected = team_arr[0] + "%20" + team_arr[1];
-
-                        }
-                        mySpinner.setSelection(i);
-
-                    }
-                }
-
-
-                // Spinner on item click listener
-                mySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-
-                    @Override
-                    public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
-
-
-                        if(position == 0){
-                            new HttpAsyncTask().execute(HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_SCHEDULE);
-                        }
-                        else {
-                            String teamSelected = teamlist.get(position);
-
-                            String[] splitStr = teamSelected.split("\\s+");
-                            if (splitStr.length > 1) {
-                                teamSelected = splitStr[0] + "%20" + splitStr[1];
-
-                            }
-                            if (isConnected()) {
-                                new HttpAsyncTask().execute("http://bsimms2.byethost5.com/index.php/schedule/" + teamSelected);
-                            } else {
-                                Toast.makeText(getActivity(), "No Network Connection", Toast.LENGTH_LONG).show();
-                            }
-                        }
-
-
-                    }
-
-                    @Override
-                    public void onNothingSelected(AdapterView<?> arg0) {
-                        // TODO Auto-generated method stub
-                    }
-                });
-
-                ///SPINNER END
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
         }
+
+        private void setTeamListSpinner() {
+            // Locate the spinner in activity_main.xml
+            Spinner mySpinner = (Spinner) getView().findViewById(R.id.my_spinner);
+
+            // Spinner adapter
+            mySpinner.setAdapter(new ArrayAdapter<String>(getActivity(),
+                    R.layout.spinner_item, teamlist));
+
+            for (int i = 0; i < teamlist.size(); i++) {
+                if (team_selected.equals(teamlist.get(i))) {
+                    String[] team_arr = team_selected.split("\\s+");
+                    if (team_arr.length > 1) {
+                        team_selected = team_arr[0] + "%20" + team_arr[1];
+
+                    }
+                    mySpinner.setSelection(i);
+
+                }
+            }
+            setSpinnerListener(mySpinner);
+
+        }
+
+        private void setSpinnerListener(Spinner mySpinner) {
+            // Spinner on item click listener
+            mySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+                @Override
+                public void onItemSelected(AdapterView<?> arg0, View arg1, int position, long arg3) {
+
+
+                    if(position == 0){
+                        new HttpAsyncTask().execute(HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_SCHEDULE);
+                    }
+                    else {
+                        String teamSelected = teamlist.get(position);
+
+                        String[] splitStr = teamSelected.split("\\s+");
+                        if (splitStr.length > 1) {
+                            teamSelected = splitStr[0] + "%20" + splitStr[1];
+
+                        }
+                        if (isConnected()) {
+                            new HttpAsyncTask().execute(HTTP_BSIMMS2_BYETHOST5_COM_INDEX_PHP_SCHEDULE_PLUS_TEAM + teamSelected);
+                        } else {
+                            Toast.makeText(getActivity(), "No Network Connection", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> arg0) {
+                    // TODO Auto-generated method stub
+                }
+            });
+        }
+    }
+    public boolean canEdit(){
+        return editPermission;
     }
 
     public void setEdit(boolean edit){
@@ -276,10 +299,21 @@ public class Schedule_fragment extends Fragment {
 
 
     private class HttpAsyncTask extends AsyncTask<String, Void, String> {
+
+        ProgressDialog dialog;
+
         @Override
         protected String doInBackground(String... urls) {
 
             return GET(urls[0]);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(getActivity(),R.style.MyTheme);
+            dialog.setCancelable(false);
+            dialog.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
+            dialog.show();
         }
 
         // onPostExecute displays the results of the AsyncTask.
@@ -289,77 +323,71 @@ public class Schedule_fragment extends Fragment {
             try {
                 JSONObject json = new JSONObject(result);
 
-                ///SPINNER START
-
-                games = new ArrayList<Game>();
-
-                //get json array
-                JSONArray jsonarray = json.getJSONArray("games");
-
-                for (int i = 0; i < jsonarray.length(); i++) {
-                    json = jsonarray.getJSONObject(i);
-
-                    Game game = new Game();
-
-                    game.setGame_id(json.optString("game_id"));
-                    game.setTeam1(json.optString("team1"));
-                    game.setTeam2(json.optString("team2"));
-                    game.setDay(json.optString("day"));
-                    game.setTime(json.optString("time"));
-                    game.setDate(json.optString("date"));
-                    game.setLocation(json.optString("location"));
-                    game.setTeam1_score(json.optString("team1_score"));
-                    game.setTeam2_score(json.optString("team2_score"));
-                    game.setUpdated(json.optString("updated"));
-
-                    games.add(game);
-
-                }
+                //InfoGameList = games
+                setInfoGameList(json);
 
                 Spinner mySpinner = (Spinner) getView().findViewById(R.id.my_spinner);
-                int pos = mySpinner.getSelectedItemPosition();
-
-
 
 
                 // Defined Array values to show in ListView
-                String[] values = new String[games.size()/2];
+                String[] values = new String[games.size()];
 
-                for (int i = 0; i < (games.size()/2) - 1; i++) {
+                for (int i = 0; i < (games.size()) - 1; i++) {
                     values[i] = games.get(i).getGame_id();
                 }
 
 
-                //Find current time
-                String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
+                Adapter_Schedule adapter = new Adapter_Schedule(getActivity(), games, values);
 
-                String[] splitTime = currentDateTimeString.split("\\s+");
-                String[] splitDate = splitTime[1].split(",");
-
-                int listViewSelection = 0;
-
-                listViewSelection = setCurrentGame(splitTime[0], splitDate[0], listViewSelection);
-                String currDate = splitTime[0] + "-" + splitDate[0];
-
-
-
-                ScheduleRow_Adapter adapter = new ScheduleRow_Adapter(getActivity(), games, values, currDate);
-
-
-                // Assign adapter to ListView
                 listView.setAdapter(adapter);
-
-                listView.setSelection(listViewSelection);
-                Toast.makeText(getActivity(), "Updated!", Toast.LENGTH_LONG).show();
+                setListviewSelectionToCurrentDay();
 
 
-
-                ///SPINNER END
+                dialog.dismiss();
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
+        }
+
+        private void setInfoGameList(JSONObject json) throws JSONException {
+            ///SPINNER START
+
+            games = new ArrayList<Info_Game>();
+
+            //get json array
+            JSONArray jsonarray = json.getJSONArray("games");
+
+            for (int i = 0; i < jsonarray.length(); i++) {
+                json = jsonarray.getJSONObject(i);
+
+                Info_Game game = new Info_Game();
+
+                game.setGame_id(json.optString("game_id"));
+                game.setTeam1(json.optString("team1"));
+                game.setTeam2(json.optString("team2"));
+                game.setDay(json.optString("day"));
+                game.setTime(json.optString("time"));
+                game.setDate(json.optString("date"));
+                game.setLocation(json.optString("location"));
+                game.setTeam1_score(json.optString("team1_score"));
+                game.setTeam2_score(json.optString("team2_score"));
+                game.setUpdated(json.optString("updated"));
+
+                games.add(game);
+
+            }
+        }
+
+        private void setListviewSelectionToCurrentDay() {
+            //Find current time
+            String currentDateTimeString = DateFormat.getDateTimeInstance().format(new Date());
+
+            String[] splitTime = currentDateTimeString.split("\\s+");
+            String[] splitDate = splitTime[1].split(",");
+
+            listView.setSelection(setCurrentGame(splitTime[0], splitDate[0], 0));
         }
     }
 

@@ -4,6 +4,7 @@ package com.example.bsimmons.navigation_drawer;
  * Created by bsimmons on 11/06/2015.
  */
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -16,12 +17,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import org.apache.http.HttpResponse;
@@ -42,13 +40,17 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class Messaging_fragment extends Fragment {
+public class Fragment_Messaging extends Fragment {
 
-    private ArrayList<MessageInfo> messages;
+    private ArrayList<Info_Message> messages;
     private ListView listView ;
     private List<String> currentDateUpdate;
     private int selected_Item;
     private boolean already_selected = false;
+    private  String name;
+    private final String GUEST_NAME = "guest";
+    private final String FUTURE_DATE = "Jun 23, 2999 11:04:17 AM";
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
@@ -79,7 +81,7 @@ public class Messaging_fragment extends Fragment {
                     FragmentManager fm = getActivity().getSupportFragmentManager();
 
                     fm.beginTransaction()
-                            .replace(R.id.container, new New_Message_fragment())
+                            .replace(R.id.container, new Fragment_New_Message())
                             .commit();
 
                 } catch (Exception e) {
@@ -88,17 +90,28 @@ public class Messaging_fragment extends Fragment {
             }
         });
 
+
+
         //sets size of array
         currentDateUpdate = new ArrayList<String>(2);
         //First place in list
         Intent i = getActivity().getIntent();
-        currentDateUpdate.add(i.getStringExtra("Player_id"));
+        if(i.getStringExtra("Name") == null){
+            name = GUEST_NAME;
+            currentDateUpdate.add("0");
+            currentDateUpdate.add("Jun 23, 2999 11:04:17 AM");
+
+        }else{
+            name = i.getStringExtra("Name");
+            currentDateUpdate.add(i.getStringExtra("Player_id"));
+            currentDateUpdate.add(i.getStringExtra("Date"));
+        }
         //Second place in list; reset each time MessageViewTimeUpdateAsyncTask is called
-        currentDateUpdate.add(i.getStringExtra("Date"));
+
 
         if(isConnected()) {
-            new UpdateDateAsyncTask().execute("http://bsimms2.byethost5.com/index.php/login/" + i.getStringExtra("Name"));
-            new MessagingAsyncTask().execute("http://bsimms2.byethost5.com/index.php/messages");
+            new UpdateDateAsyncTask().execute("http://bsimms2.byethost5.com/index.php/login/" + name);
+
 
         } else {
             Toast.makeText(getActivity(), "No Network Connection", Toast.LENGTH_LONG).show();
@@ -175,7 +188,7 @@ public class Messaging_fragment extends Fragment {
         @Override
         protected void onPostExecute(String result) {
             try {
-                Toast.makeText(getActivity(), "Sent!", Toast.LENGTH_LONG).show();
+
 
             }catch(Exception e) {
                 e.printStackTrace();
@@ -183,7 +196,7 @@ public class Messaging_fragment extends Fragment {
         }
     }
 
-    public static String GET(String url){
+    public static String POST(String url){
         InputStream inputStream = null;
         String result = "";
         try {
@@ -235,7 +248,7 @@ public class Messaging_fragment extends Fragment {
         @Override
         protected String doInBackground(String... urls) {
 
-            return GET(urls[0]);
+            return POST(urls[0]);
         }
         // onPostExecute displays the results of the AsyncTask.
         @Override
@@ -245,16 +258,22 @@ public class Messaging_fragment extends Fragment {
 
             try {
 
-                Toast.makeText(getActivity(), "Updated!", Toast.LENGTH_LONG).show();
 
                 JSONObject json = new JSONObject(result);
 
-                messages = new ArrayList<MessageInfo>();
+                messages = new ArrayList<Info_Message>();
 
                 //get json array
                 JSONArray jsonarray = json.getJSONArray("games");
+                System.out.println(jsonarray);
                 json = jsonarray.getJSONObject(0);
-                currentDateUpdate.set(1, json.optString("message_last_view_date"));
+                if(name.equalsIgnoreCase(GUEST_NAME)){
+                    currentDateUpdate.set(1,FUTURE_DATE);
+                }else {
+                    currentDateUpdate.set(1, json.optString("message_last_view_date"));
+                }
+
+                new MessagingAsyncTask().execute("http://bsimms2.byethost5.com/index.php/messages");
 
 
             } catch (Exception e) {
@@ -265,22 +284,31 @@ public class Messaging_fragment extends Fragment {
     }
 
     private class MessagingAsyncTask extends AsyncTask<String, Void, String> {
+
+        ProgressDialog dialog;
         @Override
         protected String doInBackground(String... urls) {
 
-            return GET(urls[0]);
+            return POST(urls[0]);
         }
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(getActivity(),R.style.MyTheme);
+            dialog.setCancelable(false);
+            dialog.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
+            dialog.show();
+        }
+
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String result) {
-
-
 
             try {
 
                 JSONObject json = new JSONObject(result);
 
-                messages = new ArrayList<MessageInfo>();
+                messages = new ArrayList<Info_Message>();
 
                 //get json array
                 JSONArray jsonarray = json.getJSONArray("games");
@@ -288,7 +316,7 @@ public class Messaging_fragment extends Fragment {
                 for (int i = 0; i < jsonarray.length(); i++) {
                     json = jsonarray.getJSONObject(i);
 
-                    MessageInfo info = new MessageInfo();
+                    Info_Message info = new Info_Message();
 
                     info.setName(json.optString("name"));
                     info.setSub(json.optString("subject"));
@@ -314,7 +342,7 @@ public class Messaging_fragment extends Fragment {
 
 
                 // Define a new Adapter
-                MessagingRow_Adapter adapter = new MessagingRow_Adapter(getActivity(),messages, values, currentDateUpdate.get(1));
+                Adapter_Messaging adapter = new Adapter_Messaging(getActivity(),messages, values, currentDateUpdate.get(1));
 
                 // Assign adapter to ListView
                 listView.setAdapter(adapter);
@@ -326,7 +354,7 @@ public class Messaging_fragment extends Fragment {
 
                 new MessageViewTimeUpdateAsyncTask().execute("http://bsimms2.byethost5.com/index.php/player/updateMessageViewTime");
 
-                Toast.makeText(getActivity(), "Updated!", Toast.LENGTH_LONG).show();
+                dialog.dismiss();
 
             } catch (Exception e) {
                 e.printStackTrace();

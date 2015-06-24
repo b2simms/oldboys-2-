@@ -10,7 +10,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +33,6 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 
@@ -42,13 +40,15 @@ import java.util.List;
  * Created by bsimmons on 15/06/2015.
  */
 
-public class New_Message_fragment extends Fragment {
+public class Fragment_New_Message extends Fragment {
 
-    private ArrayList<Game> games;
+    private ArrayList<Info_Game> games;
     private ListView listView;
     private List<String> list;
     private String player_name;
     private String player_team;
+    private final String GUEST_NAME = "guest";
+    private final String GUEST_TEAM = "ALL";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -63,6 +63,10 @@ public class New_Message_fragment extends Fragment {
         Intent i = getActivity().getIntent();
         player_name = i.getStringExtra("Name");
         player_team = i.getStringExtra("Team");
+        if(player_name == null){
+            player_name = GUEST_NAME;
+            player_team = GUEST_TEAM;
+        }
 
 
 
@@ -179,11 +183,9 @@ public class New_Message_fragment extends Fragment {
                     FragmentManager fm = getActivity().getSupportFragmentManager();
 
                     fm.beginTransaction()
-                            .replace(R.id.container, new Messaging_fragment(), "Messaging")
+                            .replace(R.id.container, new Fragment_Messaging(), "Messaging")
                             .commit();
 
-
-                    Toast.makeText(getActivity(), "Updated!", Toast.LENGTH_LONG).show();
 
                 } catch (Exception e) {
                     e.printStackTrace();
